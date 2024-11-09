@@ -17,7 +17,7 @@ export-env {
         } | all {|i| $i == true}
     }
 
-    # Emulates a `test -z`, but btter as it handles e.g 'false'
+    # Emulates a `test -z`, but better as it handles e.g 'false'
     def is-env-true [name: string] {
       if (has-env $name) {
         # Try to parse 'true', '0', '1', and fail if not convertible
@@ -32,8 +32,8 @@ export-env {
       }
     }
 
-    let virtual_env = 'C:\Users\hunte\OneDrive\Documents\GitHub\icesrag\.venv'
-    let bin = 'Scripts'
+    let virtual_env = r#'C:\Users\sandidgeh\Documents\git\icesrag\.venv'#
+    let bin = r#'Scripts'#
 
     let is_windows = ($nu.os-info.family) == 'windows'
     let path_name = (if (has-env 'Path') {
@@ -47,10 +47,10 @@ export-env {
     let new_path = ($env | get $path_name | prepend $venv_path)
 
     # If there is no default prompt, then use the env name instead
-    let virtual_env_prompt = (if ('icesrag-py3.12' | is-empty) {
+    let virtual_env_prompt = (if (r#'icesrag-py3.12'# | is-empty) {
         ($virtual_env | path basename)
     } else {
-        'icesrag-py3.12'
+        r#'icesrag-py3.12'#
     })
 
     let new_env = {

@@ -12,6 +12,8 @@ rank-bm25 = "^0.2.2"
 chromadb = "^0.5.18"
 streamlit = "^1.40.0"
 beautifulsoup4 = "^4.12.3"
+nltk = "^3.9.1"
+ipykernel = "^6.29.5"
 
 
 [build-system]
