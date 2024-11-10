@@ -9,12 +9,23 @@ from icesrag.utils.text_preprocess.strategy_pattern import TextPreprocessingStra
 
 # Prerequirement!
 # nltk.download('punkt')  # For word tokenization
+# nltk.download('punkt_tab')
 # nltk.download('stopwords')  # For stopwords list
 # nltk.download('wordnet')  # For lemmatization
 
 class BM25PreProcess(TextPreprocessingStrategy):
 
     def preprocess(self, text: str, **kwargs) -> str:
+        """
+        Process a single text string.
+
+        Args:
+            text (str): The input text to preprocess.
+            **kwargs: Additional keyword arguments that may be used by specific implementations.
+
+        Returns:
+            str: The preprocessed version of the input text.
+        """        
         # Step 1: Convert all words to lowercase
         text = text.lower()
         
@@ -36,19 +47,17 @@ class BM25PreProcess(TextPreprocessingStrategy):
         return ' '.join(lemmatized_words)
     
     def batch_preprocess(self, texts: List[str], **kwargs) -> List[str]:
-        
+        """
+        Process a batch of text strings.
+
+        Args:
+            texts (List[str]): A list of text strings to preprocess.
+            **kwargs: Additional keyword arguments that may be used by specific implementations.
+
+        Returns:
+            List[str]: A list of preprocessed text strings, one for each input text.
+        """        
         processed = []
         for t in texts:
             processed.append(self.preprocess_batch(t))
         return processed
-    
-
-
-    
-import nltk
-
-# Manually add the NLTK data path
-nltk.data.path.append('C:\\Users\\sandidgeh\\AppData\\Roaming\\nltk_data')
-
-PP = BM25PreProcess()
-print(PP.preprocess(text="The very happy cow jumped over the delicious cheese flavored moon."))
