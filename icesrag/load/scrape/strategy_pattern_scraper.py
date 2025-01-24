@@ -33,3 +33,14 @@ class WebScrapingStrategy(ABC):
     def extract_publisher(self, soup: BeautifulSoup) -> str:
         """Extract the publisher from the soup."""
         pass
+    @abstractmethod
+    def extract_page_url(self, soup: BeautifulSoup) -> str:
+        """ Extract the page url to texas tech"""
+        pass
+    @abstractmethod
+    def extract_pdf_url(self, soup: BeautifulSoup) -> str:
+        """ Extract the pdf download url to texas tech"""
+        pass
+    def scrape(self, soup: BeautifulSoup) -> dict:
+        """Scrape using strategy and output in dictionary format."""
+        pass
