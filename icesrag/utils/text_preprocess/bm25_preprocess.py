@@ -1,11 +1,13 @@
-from typing import List
 import string
+from typing import List
+
 import nltk
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
+from nltk.tokenize import word_tokenize
 
-from icesrag.utils.text_preprocess.strategy_pattern import TextPreprocessingStrategy
+from icesrag.utils.text_preprocess.strategy_pattern import \
+    TextPreprocessingStrategy
 
 # Prerequirement!
 # nltk.download('punkt')  # For word tokenization
@@ -59,5 +61,5 @@ class BM25PreProcess(TextPreprocessingStrategy):
         """        
         processed = []
         for t in texts:
-            processed.append(self.preprocess_batch(t))
+            processed.append(self.preprocess(t))
         return processed

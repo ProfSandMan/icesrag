@@ -1,15 +1,17 @@
 import chromadb
-from icesrag.load.store.strategy_pattern import VectorDatabaseStrategy
 
-class ChromaDB(VectorDatabaseStrategy):
+from icesrag.load.store.strategy_pattern import DatabaseStrategy
+
+
+class ChromaDBStore(DatabaseStrategy):
     """
-    ChromaDB is a concrete implementation of the VectorDatabaseStrategy pattern, 
-    which manages interactions with the Chroma vector database. This class provides
+    ChromaDB is a concrete implementation of the DatabaseStrategy pattern, 
+    which manages interactions with the Chroma database. This class provides
     functionality to connect to a ChromaDB instance, add data to a collection, and delete collections.
 
     Attributes:
         client (chromadb.Client): The ChromaDB client used to interact with the database.
-        collection (chromadb.Collection): The ChromaDB collection that holds the vector data.
+        collection (chromadb.Collection): The ChromaDB collection that holds the data.
     """
 
     def __init__(self):
@@ -36,7 +38,7 @@ class ChromaDB(VectorDatabaseStrategy):
             ValueError: If the provided dbpath is invalid or cannot be accessed.
         """
         # Create a Chroma client and connect to the database
-        self.client = chromadb.Client(persist_directory=dbpath)
+        self.client = chromadb.PersistentClient(dbpath)
 
         # Ensure the collection exists or create it if necessary
         self.collection = self.client.get_or_create_collection(name=collection_name)
@@ -71,7 +73,7 @@ class ChromaDB(VectorDatabaseStrategy):
         Args:
             data (dict): A dictionary containing the following keys:
                 - 'documents': List of documents to add.
-                - 'embeddings': List of vector embeddings corresponding to the documents.
+                - 'embeddings': List of embeddings corresponding to the documents.
                 - 'metadatas': List of metadata objects corresponding to the documents.
                 - 'ids': List of unique IDs for the documents.
 

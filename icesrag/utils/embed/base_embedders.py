@@ -1,5 +1,7 @@
 from typing import List
+
 from sentence_transformers import SentenceTransformer
+
 
 class SentenceTransformEmbedder():
     """
@@ -27,7 +29,7 @@ class SentenceTransformEmbedder():
         """
         self.model_name_ = model_name
 
-    def embed(self, text: str, **kwargs) -> List[float]:
+    def process(self, text: str, **kwargs) -> List[float]:
         """
         Method to embed a single text input into a vector.
 
@@ -44,7 +46,7 @@ class SentenceTransformEmbedder():
         embeddings = model.encode([text])
         return embeddings[0]
 
-    def batch_embed(self, texts: List[str], **kwargs) -> List[List[float]]:
+    def batch_process(self, texts: List[str], **kwargs) -> List[List[float]]:
         """
         Method to embed a batch of texts into vectors.
 
@@ -56,5 +58,5 @@ class SentenceTransformEmbedder():
         """
         embeddings = []
         for t in texts:
-            embeddings.append(self.embed(t))
+            embeddings.append(self.process(t))
         return embeddings

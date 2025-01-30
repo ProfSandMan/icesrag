@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
 
 class RetrieverStrategy(ABC):
     """
@@ -16,10 +17,6 @@ class RetrieverStrategy(ABC):
         rank_all(query: str, **kwargs) -> Tuple[List[str], List[int], List[Dict]]:
             Ranks all results for a given query.
     """
-    @abstractmethod
-    def init(self, **kwargs) -> None:
-        """Establish a connection to the vector database."""
-        pass
 
     @abstractmethod
     def connect(self, dbpath: str, collection_name: str, **kwargs) -> None:
@@ -78,7 +75,7 @@ class RetrieverEngine:
         """
         return self.strategy.top_k(query, top_k, **kwargs)
 
-    def rank_all(self, query: str, **kwargs) -> Dict[List[str], List[str], List[int], List[Dict]]:
+    def rank_all(self, query: str, **kwargs) -> Tuple[List[str], List[str], List[int], List[Dict]]:
         """
         Ranks all documents based on the query using the strategy's rank_all method.
         
