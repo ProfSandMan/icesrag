@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import chromadb
 import numpy as np
@@ -30,12 +30,12 @@ class ChromaRetriever(RetrieverStrategy):
         self.client = chromadb.PersistentClient(dbpath)
         self.collection = self.client.get_collection(name=collection_name)
 
-    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
+    def top_k(self, query: Union[str, List[float]], top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
         """
         Retrieves the top K most relevant documents for a given query.
 
         Args:
-            query (str): The query string to search for.
+            query (Union[str, List[float]]): The query string or embeddings to search for.
             top_k (int): The number of top results to retrieve.
             **kwargs: Additional keyword arguments that may be used for customizing the search.
 
@@ -45,18 +45,21 @@ class ChromaRetriever(RetrieverStrategy):
                 - A list of metadata dictionaries for each of the top K results.
         """
         if self.client is None:
-            raise ValueError("ChromaDB has not been connected. Please use .connect() first.")        
-        results = self.collection.query(query_texts=[query], n_results=top_k, **kwargs)
+            raise ValueError("ChromaDB has not been connected. Please use .connect() first.") 
+        if isinstance(query, str):
+            results = self.collection.query(query_texts=[query], n_results=top_k, **kwargs)
+        else:
+            results = self.collection.query(query_embeddings=[query], n_results=top_k, **kwargs)
         documents = results['documents'][0]
         metadatas = results['metadatas'][0]
         return documents, metadatas
 
-    def rank_all(self, query: str, **kwargs) -> Tuple[List[str], List[str], List[int], List[Dict]]:
+    def rank_all(self, query: Union[str, List[float]], **kwargs) -> Tuple[List[str], List[str], List[int], List[Dict]]:
         """
         Ranks all documents based on their relevance to a given query.
 
         Args:
-            query (str): The query string to rank documents by.
+            query (Union[str, List[float]]): The query string or embeddings to search for.
             **kwargs: Additional arguments for customizing the ranking.
         
         Returns:
@@ -75,7 +78,10 @@ class ChromaRetriever(RetrieverStrategy):
             raise ValueError("ChromaDB has not been connected. Please use .connect() first.")  
               
         total_k = self.collection.count()
-        results = self.collection.query(query_texts=[query], n_results=total_k, **kwargs)
+        if isinstance(query, str):
+            results = self.collection.query(query_texts=[query], n_results=total_k, **kwargs)
+        else:
+            results = self.collection.query(query_embeddings=[query], n_results=total_k, **kwargs)
         documents = results['documents'][0]
         document_ids = results['ids'][0]
         rankings = [i + 1 for i in range(0, len(document_ids))] 

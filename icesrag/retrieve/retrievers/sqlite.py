@@ -78,7 +78,7 @@ class SQLiteRetriever(RetrieverStrategy):
     def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
         """
         Retrieves the top K most relevant documents for a given query.
-        The query must already have gone through preprocessing (if any) before using this method.
+        * The query must already have gone through preprocessing (if any) before using this method.
 
         Args:
             query (str): The query string to search for.

@@ -11,7 +11,7 @@ class ReRankStrategy(ABC):
     """
 
     @abstractmethod
-    def rerank(self, rankings: Dict[Dict[str:int]], **kwargs) -> Dict[str:int]:
+    def rerank(self, rankings: Dict[str, Dict[str, int]], **kwargs) -> Dict[str, int]:
         """
         Reranks all chunks across all strategies.
         
@@ -49,7 +49,7 @@ class ReRankEngine:
         """
         self.strategy = strategy
 
-    def rerank(self, rankings: Dict[Dict[str:int]], **kwargs) -> Dict[str:int]:
+    def rerank(self, rankings: Dict[str, Dict[str, int]], **kwargs) -> Dict[str, int]:
         """
         Reranks all chunks across all strategies.
         
