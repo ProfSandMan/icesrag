@@ -1,5 +1,6 @@
 import json
 import sqlite3
+import logging
 from typing import Any, Dict, List, Tuple
 
 import numpy as np
@@ -8,6 +9,7 @@ from rank_bm25 import BM25Okapi
 
 from icesrag.retrieve.retrievers.strategy_pattern import RetrieverStrategy
 
+logger = logging.getLogger(__name__)
 
 def _retrieve_and_rank(query: str, collection_name: str, client: Any) -> pd.DataFrame:
     """
@@ -21,20 +23,28 @@ def _retrieve_and_rank(query: str, collection_name: str, client: Any) -> pd.Data
     Returns:
         Dataframe
     """
+
+    logger.debug(f"Retrieving data from collection {collection_name}")
     # Grab 
     sql = f"SELECT * FROM {collection_name}"
     data = pd.read_sql(sql, client)
+    logger.debug(f"Retrieved {len(data)} documents from database")
 
     # Initialize BM25 with the tokenized documents
+    logger.debug("Initializing BM25 with document embeddings")
     bm25 = BM25Okapi(data['embeddings'])
 
     # Get the BM25 scores for the query across all documents
+    logger.debug("Calculating BM25 scores for query")
     scores = bm25.get_scores(query)
     data['score'] = scores
 
     # Get indices of the top-k documents
-    data.sort_values(by='score', ascending=True, inplace=True)
+    logger.debug("Sorting documents by score")
+    data.sort_values(by='score', ascending=False, inplace=True)
     data['rank'] = np.arange(1, len(data)+1)    
+    logger.debug("Ranking complete")
+
     return data
 
 class SQLiteRetriever(RetrieverStrategy):
@@ -46,6 +56,7 @@ class SQLiteRetriever(RetrieverStrategy):
         """
         Initializes the SQLiteRetriever instance. The client and collection are initially set to None.
         """
+        logger.info("Initializing SQLiteRetriever")
         self.client = None
         self.collection = None
 
@@ -62,6 +73,7 @@ class SQLiteRetriever(RetrieverStrategy):
         Raises:
             ValueError: If the provided dbpath is invalid or cannot be accessed.
         """
+        logger.info(f"Connecting to SQLite database at {dbpath}")
         # Create a SQLite client and connect to the database
         self.client = sqlite3.connect(dbpath)
 
@@ -70,7 +82,9 @@ class SQLiteRetriever(RetrieverStrategy):
 
         # Ensure the collection exists or create it if necessary
         try:
+            logger.debug(f"Checking if collection {collection_name} exists")
             check = pd.read_sql(f"SELECT * FROM {collection_name} LIMIT 1", self.client)
+            logger.info(f"Successfully connected to existing collection {collection_name}")
         except:
             raise Exception(f"The collection '{collection_name}' does not exist.")
         self.collection = collection_name
@@ -90,6 +104,7 @@ class SQLiteRetriever(RetrieverStrategy):
                 - A list of document (strings) representing the top K results.
                 - A list of metadata dictionaries for each of the top K results.
         """
+        logger.info(f"Retrieving top {top_k} results for query: {query[:50]}...")
         if self.client is None:
             raise ValueError("SQLite DB has not been connected. Please use .connect() first.")
 
@@ -98,9 +113,11 @@ class SQLiteRetriever(RetrieverStrategy):
         data = data.iloc[:top_k]
 
         # Package
+        logger.debug("Packaging results")
         documents = list(data['documents'])
         metadatas = list(data['metadatas'])
         metadatas = [json.loads(meta) for meta in metadatas]
+        logger.info(f"Successfully retrieved {len(documents)} results")
         return documents, metadatas
 
     def rank_all(self, query: str, **kwargs) -> Tuple[List[str], List[str], List[int], List[Dict]]:
@@ -124,6 +141,7 @@ class SQLiteRetriever(RetrieverStrategy):
                  'rankings':rankings,
                  'metadatas':metadatas}            
         """
+        logger.info(f"Ranking all documents for query: {query[:50]}...")
         if self.client is None:
             raise ValueError("SQLite has not been connected. Please use .connect() first.")   
 
@@ -131,6 +149,7 @@ class SQLiteRetriever(RetrieverStrategy):
         data = _retrieve_and_rank(query, self.collection, self.client)
 
         # Package
+        logger.debug("Packaging results")
         documents = list(data['documents'])
         document_ids = list(data['ids'])
         rankings = list(data['rank'])
@@ -141,4 +160,5 @@ class SQLiteRetriever(RetrieverStrategy):
              'document_ids':document_ids,
              'rankings':rankings,
              'metadatas':metadatas}
+        logger.info(f"Successfully ranked {len(documents)} documents")
         return d

@@ -1,7 +1,9 @@
 from typing import List
+import logging
 
 from sentence_transformers import SentenceTransformer
 
+logger = logging.getLogger(__name__)
 
 class SentenceTransformEmbedder():
     """
@@ -27,7 +29,9 @@ class SentenceTransformEmbedder():
                     paraphrase-T5-large-v1
                     xlm-r-large-en-fr-it-de                
         """
+        logger.info(f"Initializing SentenceTransformEmbedder with model: {model_name}")
         self.model_name_ = model_name
+        self.model = None
 
     def process(self, text: str, **kwargs) -> List[float]:
         """
@@ -39,11 +43,18 @@ class SentenceTransformEmbedder():
         Returns:
             List[float]: The embedding of the input text as a list of floats.
         """
-        # Load pre-trained Sentence-BERT model
-        model = SentenceTransformer(self.model_name_)
+        logger.debug(f"Processing text: {text[:50]}...")
+        
+        # Load pre-trained Sentence-BERT model if not already loaded
+        if self.model is None:
+            logger.debug(f"Loading model {self.model_name_}")
+            self.model = SentenceTransformer(self.model_name_)
+            logger.info("Model loaded successfully")
 
         # Generate sentence embeddings
-        embeddings = model.encode([text])
+        logger.debug("Generating embeddings")
+        embeddings = self.model.encode([text])
+        logger.info(f"Successfully generated embedding of dimension {len(embeddings[0])}")
         return embeddings[0]
 
     def batch_process(self, texts: List[str], **kwargs) -> List[List[float]]:
@@ -56,7 +67,12 @@ class SentenceTransformEmbedder():
         Returns:
             List[List[float]]: A list of embeddings, each a list of floats, corresponding to the input texts.
         """
+        logger.info(f"Processing batch of {len(texts)} texts")
         embeddings = []
-        for t in texts:
+        
+        for i, t in enumerate(texts):
+            logger.debug(f"Processing text {i+1}/{len(texts)}")
             embeddings.append(self.process(t))
+            
+        logger.info(f"Successfully processed batch of {len(embeddings)} texts")
         return embeddings

@@ -1,10 +1,12 @@
 import json
 import sqlite3
+import logging
 
 import pandas as pd
 
 from icesrag.load.store.strategy_pattern import DatabaseStrategy
 
+logger = logging.getLogger(__name__)
 
 class SQLiteDBStore(DatabaseStrategy):
     """
@@ -23,6 +25,7 @@ class SQLiteDBStore(DatabaseStrategy):
 
         Sets the client to None initially, as the connection has not been established.
         """
+        logger.info("Initializing SQLiteDBStore")
         self.client = None
         self.collection = None
 
@@ -40,6 +43,7 @@ class SQLiteDBStore(DatabaseStrategy):
         Raises:
             ValueError: If the provided dbpath is invalid or cannot be accessed.
         """
+        logger.info(f"Connecting to SQLite database at {dbpath}")
         # Create a SQLite client and connect to the database
         self.client = sqlite3.connect(dbpath)
 
@@ -48,11 +52,14 @@ class SQLiteDBStore(DatabaseStrategy):
 
         # Ensure the collection exists or create it if necessary
         try:
+            logger.debug(f"Checking if collection {collection_name} exists")
             check = pd.read_sql(f"SELECT * FROM {collection_name} LIMIT 1", self.client)
+            logger.info(f"Collection {collection_name} already exists")
         except:
             # Create table
+            logger.info(f"Creating new collection {collection_name}")
             create = f"""CREATE TABLE {collection_name}  (
-                        [index]    INTEGER PRIMARY KEY AUTOINCREMENT,
+                        id         INTEGER PRIMARY KEY AUTOINCREMENT,
                         documents  TEXT    COLLATE NOCASE,
                         embeddings TEXT    COLLATE NOCASE
                                            UNIQUE ON CONFLICT REPLACE,
@@ -62,7 +69,9 @@ class SQLiteDBStore(DatabaseStrategy):
                      """
             self.client.execute(create)
             self.client.commit()
+            logger.debug(f"Successfully created collection {collection_name}")
         self.collection = collection_name
+        logger.info(f"Successfully connected to collection {collection_name}")
 
     def delete(self, collection_name: str) -> None:
         """
@@ -77,6 +86,7 @@ class SQLiteDBStore(DatabaseStrategy):
         Raises:
             ValueError: If SQLiteDB has not been connected.
         """
+        logger.info(f"Attempting to delete collection {collection_name}")
         if self.client is None:
             raise ValueError("SQLiteDB has not been connected. Please use .connect() first.")
         
@@ -86,6 +96,7 @@ class SQLiteDBStore(DatabaseStrategy):
         # Delete the collection
         self.client.execute(f"DROP TABLE {collection_name}")
         self.client.commit()
+        logger.info(f"Successfully deleted collection {collection_name}")
 
     def add(self, data: dict) -> None:
         """
@@ -105,6 +116,7 @@ class SQLiteDBStore(DatabaseStrategy):
         Raises:
             ValueError: If SQLiteDB has not been connected.
         """
+        logger.info(f"Adding data to collection {self.collection}")
         if self.client is None:
             raise ValueError("SQLiteDB has not been connected. Please use .connect() first.")
         
@@ -121,9 +133,12 @@ class SQLiteDBStore(DatabaseStrategy):
                 raise Exception(f"data contained unexpected key: {k}")
 
         # Convert metadatas to JSON for storage reasons
+        logger.debug("Converting metadata to JSON format")
         data = data.copy()
         data['metadatas'] = [json.dumps(meta) for meta in data['metadatas']]
 
         # Unpack the dictionary into the collection.add method
+        logger.debug(f"Adding {len(data['documents'])} documents to database")
         data = pd.DataFrame(data)
         data.to_sql(name = self.collection, con = self.client, if_exists = 'append', index = False)
+        logger.info(f"Successfully added {len(data['documents'])} documents to collection {self.collection}")

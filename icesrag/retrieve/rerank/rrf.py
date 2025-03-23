@@ -1,7 +1,9 @@
 from typing import Dict, List
+import logging
 
 from icesrag.retrieve.rerank.strategy_pattern import ReRankStrategy
 
+logger = logging.getLogger(__name__)
 
 def _rrf(ranking: List[int], k=60) -> int:
     """
@@ -21,6 +23,7 @@ def _rrf(ranking: List[int], k=60) -> int:
 
 class ReciprocalRerankFusion(ReRankStrategy):
     def __init__(self):
+        logger.info("Initializing ReciprocalRerankFusion")
         pass
 
     def rerank(self, rankings: Dict[str, Dict[str, int]], **kwargs) -> Dict[str, float]:
@@ -46,11 +49,13 @@ class ReciprocalRerankFusion(ReRankStrategy):
             Dict[str:float]: dictionary of the chunk ids and their reranked rankings
 
         """
+        logger.info(f"Starting reranking with {len(rankings)} strategies")
         n_strategies = len(rankings.keys())
         final_d = {}
         max_rank = 0
 
         # Assemble rankings
+        logger.debug("Assembling rankings from all strategies")
         for strategy in rankings:
             strategy = rankings[strategy]
             for chunk in strategy.keys():
@@ -63,12 +68,15 @@ class ReciprocalRerankFusion(ReRankStrategy):
                     final_d[chunk] = curr
                 else:
                     final_d[chunk] = [rank]
+        logger.debug(f"Found {len(final_d)} unique chunks across all strategies")
 
         # Perform ranking
+        logger.info("Performing RRF ranking")
         for chunk in final_d.keys():
             k = len(final_d[chunk])
             # Ensure all chunks have equal representation
             if k < n_strategies:
+                logger.debug(f"Chunk {chunk} missing in {n_strategies - k} strategies, padding with max rank")
                 curr = final_d[chunk]
                 delta = n_strategies - k
                 for i in range(0, delta):
@@ -78,6 +86,7 @@ class ReciprocalRerankFusion(ReRankStrategy):
             final_d[chunk] = _rrf(final_d[chunk])
 
         # Sort (highest score to lowest)
+        logger.debug("Sorting results by score")
         final_d = dict(sorted(final_d.items(), key=lambda item: item[1], reverse=True))
-
+        logger.info(f"Reranking complete, returning {len(final_d)} reranked chunks")
         return final_d

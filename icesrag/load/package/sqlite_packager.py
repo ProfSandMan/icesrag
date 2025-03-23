@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
+import logging
 
 from icesrag.load.package.strategy_pattern import PackageStrategy
 
+logger = logging.getLogger(__name__)
 
 class PackageSQLite(PackageStrategy):
     """
@@ -21,6 +23,7 @@ class PackageSQLite(PackageStrategy):
         Returns:
             List[str]: A list of generated unique IDs.
         """
+        logger.info("Creating SQLite IDs")
         ids = []
         if isinstance(chunks, str):
             chunks = [chunks]
@@ -34,6 +37,7 @@ class PackageSQLite(PackageStrategy):
                 else:
                     id = f"{tag} - {i} - {now}"
             ids.append(id)
+        logger.info(f"Generated {len(ids)} SQLite IDs")
         return ids
 
     def process(self, chunk: str, 
@@ -52,12 +56,15 @@ class PackageSQLite(PackageStrategy):
         Returns:
             Dict: A dictionary containing the chunk, embedding, metadata, and ID.
         """
+        logger.info("Processing single chunk for SQLite")
         ids = self.create_ids(chunks=chunk, tag=tag)
         d = {'documents':[chunk],
              'metadatas':[metadata],
              'ids':ids}
         if embedding is not None:
             d['embeddings'] = [embedding]
+            logger.debug("Added embedding to package")
+        logger.debug(f"Created package with ID: {ids[0]}")
         return d
 
     def batch_process(self, 
@@ -80,6 +87,7 @@ class PackageSQLite(PackageStrategy):
         Returns:
             List[Dict]: A list of dictionaries, each containing a chunk, embedding, metadata, and ID.
         """
+        logger.info(f"Processing batch of {len(chunks)} chunks for SQLite")
         documents = []
         embeds = []
         mdata = []
@@ -87,14 +95,17 @@ class PackageSQLite(PackageStrategy):
             ids = self.create_ids(chunks=chunks, tag=tag)
         if embeddings is not None:
             assert len(chunks) == len(embeddings) == len(metadatas), "chunks, embeddings, and metadatas must be the same length!"
+            logger.debug("Validated lengths of chunks, embeddings, and metadatas")
         else:
             assert len(chunks) == len(metadatas), "chunks and metadatas must be the same length!"
+            logger.debug("Validated lengths of chunks and metadatas")
 
         for i, chunk in enumerate(chunks):
             documents.append(chunk)
             mdata.append(metadatas[i])
             if embeddings is not None:
                 embeds.append(embeddings[i])
+            logger.debug(f"Processed chunk {i+1}/{len(chunks)}")
 
         d = {'documents':documents,
              'metadatas':metadatas,
@@ -102,5 +113,7 @@ class PackageSQLite(PackageStrategy):
         
         if embeddings is not None:
             d['embeddings'] = embeddings
+            logger.debug("Added embeddings to package")
         
+        logger.info(f"Successfully processed batch of {len(chunks)} chunks")
         return d
