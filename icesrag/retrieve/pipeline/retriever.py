@@ -28,7 +28,7 @@ class CompositeRetriever():
         for i, strategy in enumerate(strategies):
             logger.debug(f"Strategy {i+1}: {strategy.get('name', 'unnamed')}")
     
-    def retrieve(self, query: str, k: Optional[int] = 5) -> Tuple[List[str], List[float], List[Dict]]:
+    def top_k(self, query: str, k: Optional[int] = 5) -> Tuple[List[str], List[float], List[Dict]]:
         """
         Retrieves the (top k) results for a user-input query
 

@@ -38,7 +38,7 @@ class ChromaRetriever(RetrieverStrategy):
         self.collection = self.client.get_collection(name=collection_name)
         logger.info(f"Successfully connected to collection {collection_name}")
 
-    def top_k(self, query: Union[str, List[float]], top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
+    def top_k(self, query: Union[str, List[float]], top_k: int, **kwargs) -> Tuple[List[str], List[float], List[Dict]]:
         """
         Retrieves the top K most relevant documents for a given query.
 
@@ -50,6 +50,7 @@ class ChromaRetriever(RetrieverStrategy):
         Returns:
             Tuple:
                 - A list of document (strings) representing the top K results.
+                - A list of distances for each of the top K results.
                 - A list of metadata dictionaries for each of the top K results.
         """
         logger.info(f"Retrieving top {top_k} results for query")
@@ -65,11 +66,12 @@ class ChromaRetriever(RetrieverStrategy):
             results = self.collection.query(query_embeddings=[query], n_results=top_k, **kwargs)
             
         documents = results['documents'][0]
+        distances = results['distances'][0]
         metadatas = results['metadatas'][0]
         logger.info(f"Successfully retrieved {len(documents)} results")
-        return documents, metadatas
+        return documents, distances, metadatas
 
-    def rank_all(self, query: Union[str, List[float]], **kwargs) -> Tuple[List[str], List[str], List[int], List[Dict]]:
+    def rank_all(self, query: Union[str, List[float]], **kwargs) -> Dict:
         """
         Ranks all documents based on their relevance to a given query.
 
@@ -78,11 +80,6 @@ class ChromaRetriever(RetrieverStrategy):
             **kwargs: Additional arguments for customizing the ranking.
         
         Returns:
-            Dictionary of:
-                - List of documents.
-                - List of document IDs.
-                - List of rankings (or scores).
-                - List of metadata dictionaries.
             Form of:
                 {'documents':documents,
                 'document_ids':document_ids,

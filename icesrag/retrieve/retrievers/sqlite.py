@@ -89,7 +89,7 @@ class SQLiteRetriever(RetrieverStrategy):
             raise Exception(f"The collection '{collection_name}' does not exist.")
         self.collection = collection_name
 
-    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
+    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[float],List[Dict]]:
         """
         Retrieves the top K most relevant documents for a given query.
         * The query must already have gone through preprocessing (if any) before using this method.
@@ -102,6 +102,7 @@ class SQLiteRetriever(RetrieverStrategy):
         Returns:
             Tuple:
                 - A list of document (strings) representing the top K results.
+                - A list of distances for each of the top K results.
                 - A list of metadata dictionaries for each of the top K results.
         """
         logger.info(f"Retrieving top {top_k} results for query: {query[:50]}...")
@@ -115,12 +116,13 @@ class SQLiteRetriever(RetrieverStrategy):
         # Package
         logger.debug("Packaging results")
         documents = list(data['documents'])
+        distances = list(data['score'])
         metadatas = list(data['metadatas'])
         metadatas = [json.loads(meta) for meta in metadatas]
         logger.info(f"Successfully retrieved {len(documents)} results")
-        return documents, metadatas
+        return documents, distances, metadatas
 
-    def rank_all(self, query: str, **kwargs) -> Tuple[List[str], List[str], List[int], List[Dict]]:
+    def rank_all(self, query: str, **kwargs) -> Dict:
         """
         Ranks all documents based on their relevance to a given query.
         The query must already have gone through preprocessing (if any) before using this method.
@@ -130,11 +132,6 @@ class SQLiteRetriever(RetrieverStrategy):
             **kwargs: Additional arguments for customizing the ranking.
         
         Returns:
-            Dictionary of:
-                - List of documents.
-                - List of document IDs.
-                - List of rankings (or scores).
-                - List of metadata dictionaries.
             Form of:
                 {'documents':documents,
                  'document_ids':document_ids,
