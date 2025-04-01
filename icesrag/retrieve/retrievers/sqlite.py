@@ -75,7 +75,7 @@ class SQLiteRetriever(RetrieverStrategy):
         """
         logger.info(f"Connecting to SQLite database at {dbpath}")
         # Create a SQLite client and connect to the database
-        self.client = sqlite3.connect(dbpath)
+        self.client = sqlite3.connect(dbpath, check_same_thread=False)
 
         # Ensure 'corpus' is not taken
         assert collection_name.lower() != 'corpus', "'corpus' is a reserved table name."
