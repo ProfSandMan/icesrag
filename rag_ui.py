@@ -3,30 +3,27 @@ import nltk
 from pathlib import Path
 import json
 
+# nltk.download('wordnet')
+# nltk.download('omw-1.4') 
+
 # Add project-local nltk_data folder
 LOCAL_NLTK_PATH = Path(__file__).resolve().parent / "nltk_data_local/"
 nltk.data.path.append(str(LOCAL_NLTK_PATH))
 
-# Optional: log what paths NLTK is using
-# print("NLTK search paths:", nltk.data.path)
 
 import streamlit as st
 from frontend.app_retrievers import VANILLA_RETRIEVER, BM25_RETRIEVER, COMPOSITE_RETRIEVER, bm25_preprocessor
-import pandas as pd
+
+
 # * The way the retrievers are currently set up does not allow for filtering
-
-
 
 # * ==========================================================================================
 # * Set up Retrievers -- Should just be setting vars
 # * ==========================================================================================
 
-
-# TODO GET IT TO FUCKING WORK
 vanilla_retiever = VANILLA_RETRIEVER
 bm25_retriever = BM25_RETRIEVER
 composite_retriever = COMPOSITE_RETRIEVER
-
 
 # * ==========================================================================================
 # * State Variable Set-up
@@ -37,11 +34,9 @@ if 'retriever' not in st.session_state:
 if 'retriever_name' not in st.session_state:
     st.session_state['retriever_name'] = "Dense"
 if 'num_papers' not in st.session_state:
-    st.session_state['num_papers'] = 10 # @ Hunter - Does this work the way we need it to? 
+    st.session_state['num_papers'] = 10
 if 'current_page' not in st.session_state:
     st.session_state['current_page'] = 0  # zero-indexed
-
-
 
 # Title
 st.title("Streamlining NASA Research Retrieval with RAG-Inspired Semantic Search: DEMO/Rapid Prototype Version")
@@ -50,15 +45,37 @@ st.title("Streamlining NASA Research Retrieval with RAG-Inspired Semantic Search
 # * Sideabar Set-up 
 # * ==========================================================================================
 
-# Slider for number of papers to retrieve
-num_papers = st.sidebar.slider("Number of Papers to Retrieve", min_value=1, max_value=30, key="num_papers")
+# Image
+with st.sidebar:
+    st.image(r'frontend\mu logo.png', use_container_width=True)
+    css = """
+            <style>
+            button[title="View fullscreen"]{
+                visibility: hidden;}
+            </style>
+            """
+    st.markdown(css, unsafe_allow_html=True)
 
-# Retriever selection
-retriever_name = st.sidebar.radio(
-    "Select Retriever Type",
-    options=["Dense", "Sparse", "Composite"],
-    key="retriever_name"
-)
+    # Slider for number of papers to retrieve
+    num_papers = st.slider(label = "Number of Papers to Retrieve", min_value=1, max_value=30, key="num_papers")
+
+    # Retriever selection
+    retriever_name = st.radio(
+        "Select Retriever Type",
+        options=["Dense", "Sparse", "Composite"],
+        key="retriever_name"
+    )
+    # Footer
+    footer = """
+    <span style="font-size:12px;"><br><br>Developed by:<br>
+    <a href="mailto:samuel.brooks@marquette.edu" style="color:#e8c309;">Samuel Brooks</a><br>
+    <a href="mailto:iannicholas.ortega@marquette.edu" style="color:#e8c309;">Ian Ortega</a><br>
+    <a href="mailto:hunter.sandidge@marquette.edu" style="color:#e8c309;">Hunter Sandige</a><br>
+    © 2025
+    </span>
+    """
+
+    st.markdown(footer, unsafe_allow_html=True)
 
 
 if retriever_name != st.session_state.get('last_selected_retriever'):
@@ -74,32 +91,28 @@ if retriever_name != st.session_state.get('last_selected_retriever'):
 # * Search Bar (Dynamic Expansion)
 # * ==========================================================================================
 
-# Inject CSS for the dynamic search box
 st.markdown("""
 <style>
-.dynamic-input-container {
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 6px 10px;
-    max-height: 150px;  /* Max height before scroll */
-    overflow-y: auto;
-    background-color: white;
+/* Make all text white by default */
+body, .markdown-text-container, .stText, .stMarkdown, div, p, span {
+    color: white !important;
 }
-textarea {
-    width: 100% !important;
-    resize: none;  /* Prevent manual resizing */
-    font-size: 16px;
-    line-height: 1.4;
-    min-height: 32px;
-    border: none;
-    outline: none;
-    background-color: transparent;
+
+/* Fix table-style metadata blocks */
+div[data-testid="column"] {
+    color: white !important;
+}
+
+/* Optional: make links more visible */
+a {
+    color: #e8c309 !important;  /* yellow to match your theme */
+    text-decoration: underline;
 }
 </style>
 """, unsafe_allow_html=True)
 
 col1, col2 = st.columns([5, 1])
-
+# TODO Get rid of random box
 with col1:
     st.markdown('<div class="dynamic-input-container">', unsafe_allow_html=True)
     user_query = st.text_area(
@@ -117,14 +130,11 @@ with col2:
     submit_clicked = st.button("🔍")
 
 if submit_clicked and user_query:
-    st.markdown(f"<p style='font-size:18px; color:gray;'>Searching for: <b>{user_query}</b></p>", unsafe_allow_html=True)
-
     if retriever_name == 'Sparse':
         user_query = bm25_preprocessor.preprocess(user_query)
 
     docs, distances, meta = st.session_state['retriever'].top_k(user_query, st.session_state['num_papers'])
 
-st.subheader("Search Results")
 
 # Ensure the search only runs after the user submits a query
 if submit_clicked and user_query:
@@ -136,6 +146,8 @@ if submit_clicked and user_query:
     # Run the retrieval logic here
     docs, distances, meta = st.session_state['retriever'].top_k(user_query, st.session_state['num_papers'])
 
+
+    st.subheader("Search Results")
     # Save docs and meta to session state to persist across interactions
     st.session_state["search_results"] = {
         "docs": docs,
@@ -169,9 +181,18 @@ if "search_results" in st.session_state:
             pass
         if isinstance(keywords, list):
             keywords = ', '.join(keywords).title()
+        
+        authors = metadata.get("authors","N/A")
+        try:
+            authors = json.loads(authors)
+        except:
+            pass
+        if isinstance(authors, list):
+            authors = ', '.join(authors).title()
+        
         date = metadata.get("date", "N/A")
         url = metadata.get("paper_url", "#")
-
+    
         # Display result
         col1, col2 = st.columns([3, 2])
         with col1:
@@ -187,7 +208,10 @@ if "search_results" in st.session_state:
 
             st.markdown("**Paper URL**")
             st.markdown(f"<a href='{url}' target='_blank'>{url}</a>", unsafe_allow_html=True)
-
+            
+            st.markdown("**Authors**")
+            st.markdown(f"<div style='margin-bottom: 10px;'>{authors}</div>", unsafe_allow_html=True)
+        
         # Navigation controls
         col_prev, col_page, col_next = st.columns([1, 2, 1])
         with col_prev:
