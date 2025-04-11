@@ -1,15 +1,19 @@
 import chromadb
-from icesrag.load.store.strategy_pattern import VectorDatabaseStrategy
+import logging
 
-class ChromaDB(VectorDatabaseStrategy):
+from icesrag.load.store.strategy_pattern import DatabaseStrategy
+
+logger = logging.getLogger(__name__)
+
+class ChromaDBStore(DatabaseStrategy):
     """
-    ChromaDB is a concrete implementation of the VectorDatabaseStrategy pattern, 
-    which manages interactions with the Chroma vector database. This class provides
+    ChromaDB is a concrete implementation of the DatabaseStrategy pattern, 
+    which manages interactions with the Chroma database. This class provides
     functionality to connect to a ChromaDB instance, add data to a collection, and delete collections.
 
     Attributes:
         client (chromadb.Client): The ChromaDB client used to interact with the database.
-        collection (chromadb.Collection): The ChromaDB collection that holds the vector data.
+        collection (chromadb.Collection): The ChromaDB collection that holds the data.
     """
 
     def __init__(self):
@@ -18,6 +22,7 @@ class ChromaDB(VectorDatabaseStrategy):
 
         Sets the client to None initially, as the connection has not been established.
         """
+        logger.info("Initializing ChromaDBStore")
         self.client = None
         self.collection = None
 
@@ -35,11 +40,15 @@ class ChromaDB(VectorDatabaseStrategy):
         Raises:
             ValueError: If the provided dbpath is invalid or cannot be accessed.
         """
+        logger.info(f"Connecting to ChromaDB at {dbpath}")
         # Create a Chroma client and connect to the database
-        self.client = chromadb.Client(persist_directory=dbpath)
+        self.client = chromadb.PersistentClient(dbpath)
+        logger.debug("Successfully created ChromaDB client")
 
         # Ensure the collection exists or create it if necessary
+        logger.debug(f"Getting or creating collection {collection_name}")
         self.collection = self.client.get_or_create_collection(name=collection_name)
+        logger.info(f"Successfully connected to collection {collection_name}")
 
     def delete(self, collection_name: str) -> None:
         """
@@ -54,11 +63,13 @@ class ChromaDB(VectorDatabaseStrategy):
         Raises:
             ValueError: If ChromaDB has not been connected.
         """
+        logger.info(f"Attempting to delete collection {collection_name}")
         if self.client is None:
             raise ValueError("ChromaDB has not been connected. Please use .connect() first.")
         
         # Delete the collection
         self.client.delete_collection(name=collection_name)
+        logger.info(f"Successfully deleted collection {collection_name}")
 
     def add(self, data: dict) -> None:
         """
@@ -71,15 +82,18 @@ class ChromaDB(VectorDatabaseStrategy):
         Args:
             data (dict): A dictionary containing the following keys:
                 - 'documents': List of documents to add.
-                - 'embeddings': List of vector embeddings corresponding to the documents.
+                - 'embeddings': List of embeddings corresponding to the documents.
                 - 'metadatas': List of metadata objects corresponding to the documents.
                 - 'ids': List of unique IDs for the documents.
 
         Raises:
             ValueError: If ChromaDB has not been connected.
         """
+        logger.info(f"Adding data to collection {self.collection}")
         if self.client is None:
             raise ValueError("ChromaDB has not been connected. Please use .connect() first.")
         
         # Unpack the dictionary into the collection.add method
+        logger.debug(f"Adding {len(data['documents'])} documents to collection")
         self.collection.add(**data)
+        logger.info(f"Successfully added {len(data['documents'])} documents to collection {self.collection}")

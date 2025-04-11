@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
+
 class EmbeddingStrategy(ABC):
     """
     Abstract class representing the Strategy for generating vector embeddings.
@@ -17,7 +18,7 @@ class EmbeddingStrategy(ABC):
         self.model_name = model_name
 
     @abstractmethod
-    def embed(self, text: str, **kwargs) -> List[float]:
+    def process(self, text: str, **kwargs) -> List[float]:
         """
         Method to embed a single text input into a vector.
 
@@ -30,7 +31,7 @@ class EmbeddingStrategy(ABC):
         pass
 
     @abstractmethod
-    def batch_embed(self, texts: List[str], **kwargs) -> List[List[float]]:
+    def batch_process(self, texts: List[str], **kwargs) -> List[List[float]]:
         """
         Method to embed a batch of texts into vectors.
 
@@ -68,7 +69,7 @@ class EmbeddingEngine:
         """
         self._strategy = strategy
     
-    def embed(self, text: str, **kwargs) -> List[float]:
+    def process(self, text: str, **kwargs) -> List[float]:
         """
         Embed a single text string using the current strategy.
 
@@ -81,9 +82,9 @@ class EmbeddingEngine:
         Returns:
             List[float]: The embedding for the input text.
         """
-        return self._strategy.embed(text=text, **kwargs)
+        return self._strategy.process(text=text, **kwargs)
     
-    def batch_embed(self, texts: List[str], **kwargs) -> List[List[float]]:
+    def batch_process(self, texts: List[str], **kwargs) -> List[List[float]]:
         """
         Embed a batch of text strings using the current strategy.
 
@@ -96,4 +97,4 @@ class EmbeddingEngine:
         Returns:
             List[List[float]]: A list of embeddings for each input text.
         """
-        return self._strategy.batch_embed(texts=texts, **kwargs)
+        return self._strategy.batch_process(texts=texts, **kwargs)
