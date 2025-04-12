@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List, Dict, Tuple
+from typing import Dict, List, Tuple
+
 
 class RetrieverStrategy(ABC):
     """
@@ -16,10 +17,6 @@ class RetrieverStrategy(ABC):
         rank_all(query: str, **kwargs) -> Tuple[List[str], List[int], List[Dict]]:
             Ranks all results for a given query.
     """
-    @abstractmethod
-    def init(self, **kwargs) -> None:
-        """Establish a connection to the vector database."""
-        pass
 
     @abstractmethod
     def connect(self, dbpath: str, collection_name: str, **kwargs) -> None:
@@ -27,12 +24,12 @@ class RetrieverStrategy(ABC):
         pass
     
     @abstractmethod
-    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
+    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[float],List[Dict]]:
         """Retrieve the top K results for a given query."""
         pass
     
     @abstractmethod
-    def rank_all(self, query: str, **kwargs) -> Tuple[List[str], List[int], List[Dict]]:
+    def rank_all(self, query: str, **kwargs) -> Dict:
         """Rank all results for a given query."""
         pass
 
@@ -62,7 +59,7 @@ class RetrieverEngine:
         """
         self.strategy.connect(dbpath, collection_name, **kwargs)
 
-    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[Dict]]:
+    def top_k(self, query: str, top_k: int, **kwargs) -> Tuple[List[str], List[float],List[Dict]]:
         """
         Retrieves the top k most relevant documents for a query using the strategy's top_k method.
         
@@ -74,11 +71,12 @@ class RetrieverEngine:
         Returns:
             Tuple of:
                 - List of document
-                - List of metadata dictionaries.
+                - List of distances
+                - List of metadata dictionaries
         """
         return self.strategy.top_k(query, top_k, **kwargs)
 
-    def rank_all(self, query: str, **kwargs) -> Dict[List[str], List[str], List[int], List[Dict]]:
+    def rank_all(self, query: str, **kwargs) -> Dict:
         """
         Ranks all documents based on the query using the strategy's rank_all method.
         
@@ -87,11 +85,6 @@ class RetrieverEngine:
             **kwargs: Additional arguments for customizing the ranking.
         
         Returns:
-            Tuple of:
-                - List of documents.
-                - List of document IDs.
-                - List of rankings (or scores).
-                - List of metadata dictionaries.
             Form of:
                 {'documents':documents,
                 'document_ids':document_ids,
