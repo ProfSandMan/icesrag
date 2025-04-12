@@ -5,4 +5,7 @@ secondaryBackgroundColor = "#326A8E"
 textColor = "#ffffff"
 font = "sans serif"
 
+# Used to prevent torch errors
+[server]
+runOnSave = false
 
