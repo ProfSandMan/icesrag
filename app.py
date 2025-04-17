@@ -144,7 +144,7 @@ def quick_start():
 
 # Image
 with st.sidebar:
-    st.image(r'frontend\MU_AIM Wordmark-MB-BG (3997x2035).png', use_container_width=True)
+    st.image(r'frontend\MU_AIM.png', use_container_width=False)
     css = """
             <style>
             button[title="View fullscreen"]{
@@ -152,6 +152,7 @@ with st.sidebar:
             </style>
             """
     st.markdown(css, unsafe_allow_html=True)
+    st.write("---")
 
     # Slider for number of papers to retrieve
     num_papers = st.slider(label = "Number of Papers to Retrieve", min_value=1, max_value=30, key="num_papers")
@@ -285,7 +286,7 @@ if st.session_state['active_search'] == True:
         except:
             pass
         if isinstance(authors, list):
-            authors = ', '.join(authors).title()
+            authors = '; '.join(authors).title()
         
         date = metadata.get("date", "N/A")
         url = metadata.get("paper_url", "#")
