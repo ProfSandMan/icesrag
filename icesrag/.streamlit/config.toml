@@ -1,0 +1,14 @@
+[theme]
+primaryColor="#f6c308"
+backgroundColor="#121212"
+secondaryBackgroundColor="#212121"
+textColor="#ffffff"
+font="sans serif"
+base = "dark"
+
+# Disable file watcher to prevent torch.classes errors
+# This prevents Streamlit from trying to inspect torch modules
+[server]
+runOnSave = false
+fileWatcherType = "none"
+

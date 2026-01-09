@@ -5,6 +5,9 @@ description = "2024 Marquette ICES RAG Paper"
 authors = ["Hunter Sandidge, Sam Brooks, Ian Ortega, Chase James"]
 license = "MIT"
 readme = "README.md"
+packages = [
+    { include = "icesrag" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.12"
@@ -21,6 +24,7 @@ seaborn = "^0.13.2"
 scipy = "^1.15.2"
 scikit-posthocs = "^0.11.3"
 pathlib = "^1.0.1"
+pydantic = "^2.12.5"
 
 
 [build-system]

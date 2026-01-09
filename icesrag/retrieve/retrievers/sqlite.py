@@ -148,10 +148,11 @@ class SQLiteRetriever(RetrieverStrategy):
         # Package
         logger.debug("Packaging results")
         documents = list(data['documents'])
-        document_ids = list(data['ids'])
-        rankings = list(data['rank'])
         metadatas = list(data['metadatas'])
         metadatas = [json.loads(meta) for meta in metadatas]
+        document_ids = [d['paper_id'] for d in metadatas] # sql id may differ from the paper_id
+        # document_ids = list(data['ids'])
+        rankings = list(data['rank'])
 
         d = {'documents':documents,
              'document_ids':document_ids,
