@@ -173,7 +173,7 @@ with st.sidebar:
     st.session_state['api_key'] = None
     if st.toggle("HyDE Search", key="hyde_search"):
         st.session_state['hyde'] = True
-        openaikey = st.text_input("OpenAI API Key", placeholder = "Enter your API Key")
+        openaikey = st.text_input("OpenAI API Key", placeholder = "Enter your API Key", type = "password")
         if openaikey != '':
             st.session_state['api_key'] = openaikey
 
