@@ -110,7 +110,10 @@ class CompositeRetriever():
                         # * note: if similar keys exists, only the first strategy keys are retained
                         metadatas.append(result['metadatas'][chunk_pos] | temp['metadata'])
                 except ValueError:
-                    logger.warning(f"Document ID {id} not found in results from fusion rank")
+                    # ! We deleted some documents from the ices.db, but we did not do so in the chroma and bm25 databases; this will fire if those papers are retrieved
+                        # Doc IDs such as 1146_2025-03-22 19:25:11 & 464_2025-03-22 19:25:11, etc.
+                    pass
+                    # logger.warning(f"Document ID {id} not found in results from fusion rank")
         
         logger.info(f"Retrieval complete, returning {len(docs)} results")
         return docs, scores, metadatas

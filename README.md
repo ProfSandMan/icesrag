@@ -42,7 +42,7 @@ Before you begin, make sure you have:
 
 1. **Start the Streamlit app**:
    ```bash
-   poetry run streamlit run app.py
+   poetry run streamlit run icesrag/app.py
    ```
 
 2. The application will open in your default web browser. If it doesn't, you can access it at:
@@ -50,18 +50,106 @@ Before you begin, make sure you have:
    http://localhost:8501
    ```
 
+## 📖 Using the Streamlit Frontend
+
+### Getting Started
+
+1. **Launch the app** using the command above
+2. Click the **"Quick Start Guide"** button on the main page for an overview
+3. Enter your search query in the text area
+
+### Search Interface
+
+#### Main Search Bar
+- **Location**: Large text area at the top of the page
+- **Usage**: Type your search query (supports multi-line queries)
+- **Keyboard Shortcut**: Press `Ctrl+Enter` (or `Cmd+Enter` on Mac) to submit your search
+- **Search Button**: Click the 🔍 button to the right of the search bar
+
+#### Sidebar Controls
+
+The left sidebar provides several configuration options:
+
+1. **Number of Papers to Retrieve**
+   - Use the slider to select how many results you want (1-30 papers)
+   - Default: 10 papers
+
+2. **Retriever Type Selection**
+   Choose from three retrieval methods:
+   
+   - **Dense Retrieval (Vanilla RAG)**
+     - Uses AI-generated embeddings to match the semantic meaning of your query
+     - Best for: Conceptual questions, natural language queries, finding papers by topic or research area
+     - Example: "How do life support systems handle CO2 removal in space habitats?"
+   
+   - **Sparse Retrieval (BM25)**
+     - Matches keywords directly using traditional information retrieval
+     - Best for: Specific technical terms, known jargon, exact phrase matching
+     - Example: "ECLSS thermal control subsystem"
+   
+   - **Composite Retrieval (RRF)**
+     - Combines both Dense and Sparse methods using Reciprocal Rank Fusion
+     - Best for: General use when you want balanced results
+     - Balances the precision of keyword matching with the flexibility of semantic search
+
+3. **HyDE Search (Optional)**
+   - **Toggle**: Enable "HyDE Search" to use Hypothetical Document Embedding
+   - **What it does**: Uses an LLM to transform your query into a hypothetical research paper abstract before searching
+   - **Requires**: OpenAI API key (enter in the text field that appears when toggled on)
+   - **Best for**: Complex research questions that benefit from query expansion
+   - **Note**: This feature requires an OpenAI API key and will make API calls (costs may apply)
+
+### Viewing Results
+
+Once you submit a search:
+
+1. **Results Display**: Papers are shown one at a time with:
+   - **Title**: Paper title
+   - **Abstract**: Full abstract text
+   - **Metadata Panel** (right side):
+     - Paper URL (clickable link)
+     - Authors
+     - Keywords
+     - Publication date
+
+2. **Navigation**:
+   - Use **⬅️ Previous** and **Next ➡️** buttons to browse through results
+   - Page indicator shows your current position (e.g., "Page 3 of 15")
+   - Results are paginated, showing one paper per page
+
+3. **Search Tips**:
+   - **Use longer, more specific queries** for better results
+   - Try using your actual research question or working abstract
+   - Example of a good query:
+     > "I am exploring whether or not human beings can survive on Mars. The focus of my research is on whether or not Mars has the chemical compounds necessary to support human life. I care both about the elemental composition and compound structures we have discovered so far on the planet."
+   - Adjust the number of papers if you want more or fewer results
+   - Try different retrieval methods if initial results aren't relevant
+
+### Important Notes
+
+- **Data Source**: All results come from the [NASA ICES Paper Repository](https://hdl.handle.net/2346/58495)
+- **HyDE Search**: Requires a valid OpenAI API key and will incur API costs
+- **Database**: Ensure the `data/` directory contains the required database files (`ices.db`, `chroma.db`, `bm25.db`)
+
 ## 🔍 Features
 
 - **Multiple Retrieval Methods**:
-  - Dense Retrieval (Semantic Search)
-  - Sparse Retrieval (Keyword-based)
-  - Composite Retrieval (Combined approach)
+  - **Dense Retrieval**: Semantic search using AI embeddings for conceptual matching
+  - **Sparse Retrieval**: Keyword-based BM25 search for precise term matching
+  - **Composite Retrieval**: Hybrid approach combining both methods via Reciprocal Rank Fusion
+
+- **Advanced Search Options**:
+  - **HyDE (Hypothetical Document Embedding)**: Query expansion using LLMs to improve search quality
+  - Configurable result count (1-30 papers)
+  - Real-time retrieval method switching
 
 - **User-Friendly Interface**:
-  - Clean, modern design
-  - Easy-to-use search functionality
-  - Detailed paper information display
+  - Clean, modern dark theme design
+  - Intuitive sidebar controls
+  - Detailed paper metadata display
+  - One-at-a-time result browsing with navigation
   - Keyboard shortcuts (Ctrl+Enter to search)
+  - Quick Start Guide dialog for new users
 
 ## 🛠️ Technical Details
 
@@ -86,12 +174,41 @@ The project uses several key Python packages with exact versions:
 
 ```
 icesrag/
-├── app.py                 # Main Streamlit application
-├── frontend/              # Frontend components and assets
-├── icesrag/              # Core RAG implementation
-├── data/                 # Database files
-├── nltk_data_local/      # Local NLTK data
-└── .streamlit/           # Streamlit configuration
+├── icesrag/                    # Main package directory
+│   ├── app.py                  # Streamlit application entry point
+│   ├── app_retrievers.py       # Retriever initialization and setup
+│   ├── corpus_builder/         # Corpus building and data scraping
+│   │   ├── main_builder.py     # Main corpus building pipeline
+│   │   ├── scrape_ices_repo.py  # Repository scraping
+│   │   ├── embed_abstracts.py  # Abstract embedding generation
+│   │   └── ...
+│   ├── load/                   # Data loading and storage
+│   │   ├── package/            # Data packaging strategies
+│   │   ├── store/              # Database storage implementations
+│   │   └── pipeline/           # Loading pipeline
+│   ├── retrieve/               # Retrieval system
+│   │   ├── retrievers/         # Retriever implementations (Chroma, SQLite)
+│   │   ├── rerank/             # Re-ranking strategies (RRF)
+│   │   └── pipeline/           # Retrieval pipeline
+│   ├── utils/                  # Utility modules
+│   │   ├── embed/              # Embedding engines
+│   │   ├── text_preprocess/    # Text preprocessing
+│   │   ├── hyde.py             # HyDE implementation
+│   │   └── llms.py             # LLM interfaces
+│   └── .streamlit/             # Streamlit configuration
+│       └── config.toml          # Theme and server settings
+├── assets/                      # Static assets (logos, images)
+├── data/                        # Database files
+│   ├── ices.db                  # Main SQLite database
+│   ├── chroma.db/               # ChromaDB vector database
+│   └── bm25.db                  # BM25 sparse index
+├── evaluation/                  # Evaluation scripts and notebooks
+│   ├── 2025 (sparse vs dense)/  # 2025 evaluation experiments
+│   └── 2026 (hyde)/             # 2026 HyDE evaluation experiments
+├── nltk_data_local/             # Local NLTK data files
+├── app.py                       # (Legacy - use icesrag/app.py instead)
+├── pyproject.toml               # Poetry dependencies
+└── README.md                    # This file
 ```
 
 ## 🤝 Contributing
@@ -105,8 +222,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 👥 Authors
 
 - Sam Brooks
+- Lilly Hanslik
 - Ian Ortega
 - Hunter Sandidge
+- Joseph Wall
 
 ## 📚 Resources
 
@@ -126,7 +245,19 @@ If you encounter any issues:
    - If you get NLTK-related errors, run `poetry run python nltkdownload.py` again
 
 3. **Database Access**:
-   - Ensure the `data/` directory contains the necessary database files
+   - Ensure the `data/` directory contains the necessary database files:
+     - `ices.db` - Main database with paper abstracts
+     - `chroma.db/` - ChromaDB vector database for dense retrieval
+     - `bm25.db` - BM25 index for sparse retrieval
    - Check file permissions if you encounter database access errors
+
+4. **Streamlit App Path**:
+   - Make sure you're running `streamlit run icesrag/app.py` (not `app.py` from root)
+   - The app is located in the `icesrag/` package directory
+
+5. **HyDE Search Issues**:
+   - Ensure you have a valid OpenAI API key
+   - Check your API key has sufficient credits/quota
+   - Verify the API key is entered correctly in the sidebar
 
 For additional help, please open an issue in the repository.
