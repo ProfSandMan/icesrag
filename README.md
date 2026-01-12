@@ -252,9 +252,10 @@ If you encounter any issues:
    - Check file permissions if you encounter database access errors
 
 4. **Streamlit App Path**:
-   - Make sure you're running `streamlit run icesrag/app.py` (not `app.py` from root)
-   - The app is located in the `icesrag/` package directory
-
+   - The app is located in the `icesrag/icesrag` package directory
+   - CD into /icesrag (so the file path is .../icesrag/icesrag)
+   - Run command `poetry run streamlit run app.py` (not `app.py` from root)
+   
 5. **HyDE Search Issues**:
    - Ensure you have a valid OpenAI API key
    - Check your API key has sufficient credits/quota
