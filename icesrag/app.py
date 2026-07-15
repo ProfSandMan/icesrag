@@ -10,7 +10,7 @@ from pathlib import Path
 
 import nltk
 # Add project-local nltk_data folder
-LOCAL_NLTK_PATH = Path(__file__).resolve().parent / "nltk_data_local/"
+LOCAL_NLTK_PATH = Path(__file__).resolve().parent.parent / "nltk_data_local/"
 nltk.data.path.append(str(LOCAL_NLTK_PATH))
 import streamlit as st
 

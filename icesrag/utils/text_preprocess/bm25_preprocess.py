@@ -1,8 +1,14 @@
 import string
 from typing import List
 import logging
+from pathlib import Path
 
 import nltk
+# Add project-local nltk_data folder
+LOCAL_NLTK_PATH = Path(__file__).resolve().parent.parent.parent.parent / "nltk_data_local/"
+if str(LOCAL_NLTK_PATH) not in nltk.data.path:
+    nltk.data.path.append(str(LOCAL_NLTK_PATH))
+
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
