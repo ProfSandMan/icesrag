@@ -303,6 +303,12 @@ if st.session_state['active_search'] == True and st.session_state['current_page'
 # Only proceed with displaying results if they're available
 if st.session_state['active_search'] == True:
     st.subheader("Search Results")
+    
+    # Show HyDE query if it was used
+    if st.session_state['hyde'] and st.session_state['hyde_query']:
+        with st.expander("🤖 View HyDE Generated Query"):
+            st.markdown(st.session_state['hyde_query'])
+    
     docs = st.session_state["search_results"]["docs"]
     meta = st.session_state["search_results"]["meta"]
 
